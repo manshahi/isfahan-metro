@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>مسیریاب و زمان‌بندی مترو اصفهان</title>
+    <style>
+        :root {
+            --bg-color: #f1f5f9;
+            --card-bg: #ffffff;
+            --primary: #1e3a8a;
+            --primary-accent: #2563eb;
+            --secondary: #0d9488;
+            --text-main: #0f172a;
+            --text-muted: #64748b;
+            --border-color: #e2e8f0;
+            --highlight: #fef08a;
+            --highlight-text: #854d0e;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        body { background-color: var(--bg-color); color: var(--text-main); padding: 20px; display: flex; justify-content: center; }
+        .container { width: 100%; max-width: 900px; background: var(--card-bg); border-radius: 16px; padding: 28px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); }
+        
+        header { text-align: center; margin-bottom: 24px; border-bottom: 2px solid #f1f5f9; padding-bottom: 16px; }
+        header h1 { color: var(--primary); font-size: 1.6rem; margin-bottom: 6px; }
+        header p { color: var(--text-muted); font-size: 0.95rem; }
+
+        .controls { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-bottom: 24px; background: #f8fafc; padding: 20px; border-radius: 12px; border: 1px solid var(--border-color); }
+        .form-group { display: flex; flex-direction: column; gap: 6px; }
+        label { font-size: 0.9rem; font-weight: bold; color: #334155; }
+        select, input[type="time"] { padding: 10px; border-radius: 8px; border: 1px solid #cbd5e1; font-size: 0.95rem; outline: none; background: #fff; }
+        
+        .btn-now { background: var(--primary-accent); color: white; border: none; padding: 10px 16px; border-radius: 8px; font-weight: bold; cursor: pointer; margin-top: auto; transition: background 0.2s; }
+        .btn-now:hover { background: var(--primary); }
+
+        .route-summary { background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%); border-radius: 12px; padding: 20px; margin-bottom: 24px; border: 1px solid #bfdbfe; }
+        .route-title { font-size: 1.1rem; font-weight: bold; color: var(--primary); margin-bottom: 12px; }
+        .route-details { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; }
+        
+        .card { background: white; padding: 12px 16px; border-radius: 8px; border: 1px solid #bfdbfe; box-shadow: 0 2px 4px rgba(0,0,0,0.02); }
+        .card-label { font-size: 0.8rem; color: var(--text-muted); margin-bottom: 4px; }
+        .card-value { font-size: 1.1rem; font-weight: bold; color: var(--primary-accent); }
+
+        .schedule-section { margin-top: 24px; }
+        .schedule-section h3 { margin-bottom: 12px; color: #1e293b; font-size: 1.1rem; }
+        
+        .table-container { overflow-x: auto; border: 1px solid var(--border-color); border-radius: 8px; }
+        table { width: 100%; border-collapse: collapse; text-align: center; font-size: 0.9rem; }
+        th, td { padding: 10px; border-bottom: 1px solid var(--border-color); }
+        th { background: #f8fafc; color: #475569; }
+        tr:nth-child(even) { background-color: #f8fafc; }
+        .highlight-row { background-color: var(--highlight) !important; color: var(--highlight-text); font-weight: bold; }
+
+        footer { text-align: center; margin-top: 24px; font-size: 0.8rem; color: var(--text-muted); }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <header>
+        <h1>🚈 برنامه‌ریزی سفر و زمان‌بندی مترو اصفهان</h1>
+        <p>محاسبه زمان سفر و قطار بعدی برای کلیه ایستگاه‌های خط ۱</p>
+    </header>
+
+    <div class="controls">
+        <div class="form-group">
+            <label for="originSelect">ایستگاه مبدا:</label>
+            <select id="originSelect"></select>
+        </div>
+
+        <div class="form-group">
+            <label for="destSelect">ایستگاه مقصد:</label>
+            <select id="destSelect"></select>
+        </div>
+
+        <div class="form-group">
+            <label for="timeInput">زمان حضور در مبدا:</label>
+            <input type="time" id="timeInput">
+        </div>
+
+        <button class="btn-now" id="nowBtn">تنظیم به زمان جاری</button>
+    </div>
+
+    <div class="route-summary">
+        <div class="route-title" id="routeTitle">اطلاعات مسیر سفر</div>
+        <div class="route-details">
+            <div class="card">
+                <div class="card-label">تعداد ایستگاه‌ها</div>
+                <div class="card-value" id="stationCount">-</div>
+            </div>
+            <div class="card">
+                <div class="card-label">مدت زمان داخل قطار</div>
+                <div class="card-value" id="travelTime">-</div>
+            </div>
+            <div class="card">
+                <div class="card-label">حرکت قطار بعدی از مبدا</div>
+                <div class="card-value" id="nextTrainTime">-</div>
+            </div>
+            <div class="card">
+                <div class="card-label">زمان تقریبی رسیدن به مقصد</div>
+                <div class="card-value" id="arrivalTime">-</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="schedule-section">
+        <h3>📋 جدول کامل زمان‌بندی حرکت از ایستگاه مبدا</h3>
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th>ردیف</th>
+                        <th>ساعت حرکت قطار</th>
+                        <th>وضعیت نسبت به زمان انتخابی</th>
+                    </tr>
+                </thead>
+                <tbody id="scheduleTableBody"></tbody>
+            </table>
+        </div>
+    </div>
+
+    <footer>
+        بر اساس اطلاعات رسمی شرکت مترو منطقه اصفهان (خط ۱)
+    </footer>
+</div>
+
+<script>
+    // 1. اطلاعات تمامی ایستگاه‌های خط ۱ مترو اصفهان به ترتیب از شمال به جنوب
+    const stationsList = [
+        { id: "ghods", name: "قدس", offsetSouth: 0 },
+        { id: "baharestan", name: "بهارستان", offsetSouth: 2 },
+        { id: "golestan", name: "گلستان", offsetSouth: 4 },
+        { id: "mofatteh", name: "مفتح", offsetSouth: 6 },
+        { id: "alikhani", name: "شهید علیخانی", offsetSouth: 8 },
+        { id: "jaber", name: "جابر", offsetSouth: 10 },
+        { id: "kaveh", name: "کاوه", offsetSouth: 12 },
+        { id: "chamran", name: "شهید چمران", offsetSouth: 14 },
+        { id: "bahonar", name: "شهید باهنر", offsetSouth: 16 },
+        { id: "shohada", name: "شهدا", offsetSouth: 18 },
+        { id: "takhti", name: "تختی", offsetSouth: 20 },
+        { id: "emam_hossein", name: "امام حسین (دروازه دولت)", offsetSouth: 22 },
+        { id: "enqelab", name: "انقلاب", offsetSouth: 25 },
+        { id: "sio se pol", name: "سی و سه پل", offsetSouth: 27 },
+        { id: "shariati", name: "شریعتی", offsetSouth: 29 },
+        { id: "azadi", name: "آزادی (دروازه شیراز)", offsetSouth: 31 },
+        { id: "daneshgah", name: "دانشگاه", offsetSouth: 33 },
+        { id: "kargar", name: "کارگر", offsetSouth: 35 },
+        { id: "koy_emam", name: "کوی امام", offsetSouth: 37 },
+        { id: "defa_moghaddas", name: "دفاع مقدس (صفه)", offsetSouth: 40 }
+    ];
+
+    // ساعات حرکت مبدا اول خط (ایستگاه قدس به سمت جنوب)
+    const baseSouthTimes = [
+        "06:07", "06:20", "06:33", "06:46", "06:59", "07:12", "07:25", "07:38",
+        "07:51", "08:04", "08:17", "08:30", "08:43", "08:56", "09:09", "09:22",
+        "09:35", "09:48", "10:01", "10:14", "10:27", "10:40", "10:53", "11:06",
+        "11:19", "11:32", "11:45", "11:58", "12:11", "12:24", "12:37", "12:50",
+        "13:03", "13:16", "13:29", "13:42", "13:55", "14:08", "14:21", "14:34",
+        "14:47", "15:00", "15:13", "15:26", "15:39", "15:52", "16:05", "16:18",
+        "16:31", "16:44", "16:57", "17:10", "17:23", "17:36", "17:49", "18:02",
+        "18:15", "18:28", "18:41", "18:54", "19:07", "19:20", "19:33", "19:46",
+        "19:59", "20:12", "20:25", "20:38", "20:50", "21:05", "21:20", "21:30"
+    ];
+
+    // ساعات حرکت مبدا اول خط (ایستگاه دفاع مقدس به سمت شمال)
+    const baseNorthTimes = [
+        "06:10", "06:23", "06:36", "06:49", "07:02", "07:15", "07:27", "07:40",
+        "07:53", "08:06", "08:19", "08:32", "08:45", "08:58", "09:11", "09:24",
+        "09:37", "09:50", "10:03", "10:16", "10:29", "10:42", "10:55", "11:08",
+        "11:21", "11:34", "11:47", "12:00", "12:13", "12:26", "12:39", "12:52",
+        "13:05", "13:18", "13:31", "13:44", "13:57", "14:10", "14:23", "14:36",
+        "14:49", "15:02", "15:15", "15:28", "15:41", "15:54", "16:07", "16:20",
+        "16:33", "16:46", "16:59", "17:12", "17:25", "17:38", "17:51", "18:04",
+        "18:17", "18:30", "18:43", "18:56", "19:09", "19:22", "19:35", "19:48",
+        "20:01", "20:14", "20:27", "20:40", "20:53", "21:06", "21:20", "21:30"
+    ];
+
+    const originSelect = document.getElementById('originSelect');
+    const destSelect = document.getElementById('destSelect');
+    const timeInput = document.getElementById('timeInput');
+    const nowBtn = document.getElementById('nowBtn');
+
+    // مقداردهی اولیه dropdown ها
+    function initDropdowns() {
+        stationsList.forEach((st, idx) => {
+            const opt1 = new Option(st.name, idx);
+            const opt2 = new Option(st.name, idx);
+            originSelect.add(opt1);
+            destSelect.add(opt2);
+        });
+        // مبدا پیش‌فرض: تختی (10)، مقصد پیش‌فرض: آزادی (15)
+        originSelect.value = 10;
+        destSelect.value = 15;
+    }
+
+    function toMinutes(tStr) {
+        const [h, m] = tStr.split(':').map(Number);
+        return h * 60 + m;
+    }
+
+    function toTimeString(m) {
+        const h = Math.floor(m / 60) % 24;
+        const mins = m % 60;
+        return `${String(h).padStart(2, '0')}:${String(mins).padStart(2, '0')}`;
+    }
+
+    function setCurrentTime() {
+        const d = new Date();
+        timeInput.value = `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
+        calculateRoute();
+    }
+
+    function calculateRoute() {
+        const originIdx = parseInt(originSelect.value);
+        const destIdx = parseInt(destSelect.value);
+        const userTimeStr = timeInput.value;
+
+        if (isNaN(originIdx) || isNaN(destIdx) || !userTimeStr) return;
+
+        if (originIdx === destIdx) {
+            document.getElementById('routeTitle').innerText = "مبدا و مقصد یکسان است!";
+            document.getElementById('stationCount').innerText = "0";
+            document.getElementById('travelTime').innerText = "0 دقیقه";
+            document.getElementById('nextTrainTime').innerText = "-";
+            document.getElementById('arrivalTime').innerText = "-";
+            document.getElementById('scheduleTableBody').innerHTML = "";
+            return;
+        }
+
+        const isSouthbound = originIdx < destIdx;
+        const stationCount = Math.abs(destIdx - originIdx);
+        const originSt = stationsList[originIdx];
+        const destSt = stationsList[destIdx];
+
+        // محاسبه زمان پیمایش (حدود ۲ دقیقه بین هر ایستگاه)
+        const travelMinutes = isSouthbound 
+            ? Math.abs(destSt.offsetSouth - originSt.offsetSouth)
+            : Math.abs((40 - destSt.offsetSouth) - (40 - originSt.offsetSouth));
+
+        const baseTimes = isSouthbound ? baseSouthTimes : baseNorthTimes;
+        const offset = isSouthbound ? originSt.offsetSouth : (40 - originSt.offsetSouth);
+
+        // تولید جدول زمان‌بندی ایستگاه مبدا
+        const stationSchedule = baseTimes.map(t => toTimeString(toMinutes(t) + offset));
+        const userMin = toMinutes(userTimeStr);
+
+        let nextTrainMin = -1;
+        let firstUpcomingIdx = -1;
+
+        for (let i = 0; i < stationSchedule.length; i++) {
+            const trainMin = toMinutes(stationSchedule[i]);
+            if (trainMin >= userMin) {
+                nextTrainMin = trainMin;
+                firstUpcomingIdx = i;
+                break;
+            }
+        }
+
+        // بروزرسانی UI خلاصه مسیر
+        const dirText = isSouthbound ? "به سمت جنوب (صفه)" : "به سمت شمال (قدس)";
+        document.getElementById('routeTitle').innerText = `از ${originSt.name} به ${destSt.name} (${dirText})`;
+        document.getElementById('stationCount').innerText = `${stationCount} ایستگاه`;
+        document.getElementById('travelTime').innerText = `حدود ${travelMinutes} دقیقه`;
+
+        if (nextTrainMin !== -1) {
+            const diffMin = nextTrainMin - userMin;
+            const diffText = diffMin === 0 ? "هم‌اکنون" : `${diffMin} دقیقه دیگر`;
+            document.getElementById('nextTrainTime').innerText = `${toTimeString(nextTrainMin)} (${diffText})`;
+            document.getElementById('arrivalTime').innerText = toTimeString(nextTrainMin + travelMinutes);
+        } else {
+            document.getElementById('nextTrainTime').innerText = "پایان حرکت روزانه";
+            document.getElementById('arrivalTime').innerText = "-";
+        }
+
+        // رندر جدول
+        const tbody = document.getElementById('scheduleTableBody');
+        tbody.innerHTML = '';
+        stationSchedule.forEach((t, i) => {
+            const tr = document.createElement('tr');
+            if (i === firstUpcomingIdx) tr.className = 'highlight-row';
+            
+            const m = toMinutes(t);
+            let status = m < userMin ? "حرکت کرده" : (i === firstUpcomingIdx ? "⭐ قطار بعدی" : "آینده");
+            
+            tr.innerHTML = `<td>${i + 1}</td><td><strong>${t}</strong></td><td>${status}</td>`;
+            tbody.appendChild(tr);
+        });
+    }
+
+    // Event Listeners
+    originSelect.addEventListener('change', calculateRoute);
+    destSelect.addEventListener('change', calculateRoute);
+    timeInput.addEventListener('input', calculateRoute);
+    nowBtn.addEventListener('click', setCurrentTime);
+
+    // شروع اولیه
+    initDropdowns();
+    setCurrentTime();
+</script>
+</body>
+</html>
