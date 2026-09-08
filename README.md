@@ -6,6 +6,16 @@
 
 ---
 
+## 🔗 لینک‌های دسترسی و اجرای پروژه
+
+- 🌐 **لینک اجرای آنلاین (GitHub Pages):**  
+  [https://manshahi.github.io/isfahan-metro/](https://manshahi.github.io/isfahan-metro/)
+
+- 📦 **سورس‌کد پروژه در گیت‌هاب:**  
+  [https://github.com/manshahi/isfahan-metro](https://github.com/manshahi/isfahan-metro)
+
+---
+
 ## ✨ ویژگی‌های کلیدی (Features)
 
 - 📱 **پشتیبانی کامل از PWA:** قابلیت نصب روی سیستم‌عامل‌های Android، iOS و Windows بدون نیاز به استور.
