@@ -5,6 +5,7 @@ const originSelect = document.getElementById('originSelect');
 const destSelect = document.getElementById('destSelect');
 const timeInput = document.getElementById('timeInput');
 const nowBtn = document.getElementById('nowBtn');
+const booleanCheckbox = document.getElementById('checkbox');
 
 // ۱. بارگذاری اطلاعات از schedule.json
 async function loadScheduleData() {
@@ -59,7 +60,8 @@ function setCurrentTime() {
 // ۳. محاسبه مسیر و نمایش زمان‌بندی
 function calculateRoute() {
     if (!scheduleData || !stationsList.length) return;
-
+    if (booleanCheckbox.checked){document.getElementsByTagName('label')[2].innerHTML='زمان حضور در مقصد'
+    }else{document.getElementsByTagName('label')[2].innerHTML='زمان حضور در مبدا'}
     const originIdx = parseInt(originSelect.value);
     const destIdx = parseInt(destSelect.value);
     const userTimeStr = timeInput.value;
@@ -88,26 +90,39 @@ function calculateRoute() {
 
     const travelMinutes = isSouthbound 
         ? Math.abs(destSt.offsetSouth - originSt.offsetSouth)
-        : Math.abs((40 - destSt.offsetSouth) - (40 - originSt.offsetSouth));
+        : Math.abs((39 - destSt.offsetSouth) - (39 - originSt.offsetSouth));
 
     const baseTimes = isSouthbound ? activeSchedule.southTimes : activeSchedule.northTimes;
-    const offset = isSouthbound ? originSt.offsetSouth : (40 - originSt.offsetSouth);
+    const offset = isSouthbound ? originSt.offsetSouth : (39 - originSt.offsetSouth);
+    const offsetdst = isSouthbound ? destSt.offsetSouth : (39 - destSt.offsetSouth);
+
 
     const stationSchedule = baseTimes.map(t => toTimeString(toMinutes(t) + offset));
+    const stationScheduledst = baseTimes.map(t => toTimeString(toMinutes(t) + offsetdst));
     const userMin = toMinutes(userTimeStr);
 
     let nextTrainMin = -1;
     let firstUpcomingIdx = -1;
+    if (booleanCheckbox.checked) {
+        for (let i = 0; i < stationScheduledst.length; i++) {
+            const trainMin = toMinutes(stationScheduledst[i]);
+            if (trainMin >= userMin) {
+                nextTrainMin = trainMin-(2*travelMinutes);
+                firstUpcomingIdx = i-1;
+                break;
+            }
+        }
 
-    for (let i = 0; i < stationSchedule.length; i++) {
-        const trainMin = toMinutes(stationSchedule[i]);
-        if (trainMin >= userMin) {
-            nextTrainMin = trainMin;
-            firstUpcomingIdx = i;
-            break;
+    }else{
+        for (let i = 0; i < stationSchedule.length; i++) {
+            const trainMin = toMinutes(stationSchedule[i]);
+            if (trainMin >= userMin) {
+                nextTrainMin = trainMin;
+                firstUpcomingIdx = i;
+                break;
+            }
         }
     }
-
     const dirText = isSouthbound ? "به سمت جنوب (صفه)" : "به سمت شمال (قدس)";
     const dayTag = isFriday ? " [برنامه روز جمعه]" : " [برنامه روزهای عادی]";
     document.getElementById('routeTitle').innerText = `از ${originSt.name} به ${destSt.name} (${dirText})${dayTag}`;
@@ -115,7 +130,12 @@ function calculateRoute() {
     document.getElementById('travelTime').innerText = `حدود ${travelMinutes} دقیقه`;
 
     if (nextTrainMin !== -1) {
-        const diffMin = nextTrainMin - userMin;
+        let diffMin = 0;
+        if (booleanCheckbox.checked) {
+            diffMin = nextTrainMin - new Date().getHours() * 60 - new Date().getMinutes();
+        }else{
+            diffMin = nextTrainMin - userMin;
+        }
         const diffText = diffMin === 0 ? "هم‌اکنون" : `${diffMin} دقیقه دیگر`;
         document.getElementById('nextTrainTime').innerText = `${toTimeString(nextTrainMin)} (${diffText})`;
         document.getElementById('arrivalTime').innerText = toTimeString(nextTrainMin + travelMinutes);
@@ -131,7 +151,7 @@ function calculateRoute() {
         if (i === firstUpcomingIdx) tr.className = 'highlight-row';
         
         const m = toMinutes(t);
-        let status = m < userMin ? "حرکت کرده" : (i === firstUpcomingIdx ? "⭐ قطار بعدی" : "آینده");
+        let status = m < new Date().getHours() * 60 - new Date().getMinutes() ? "حرکت کرده" : (i === firstUpcomingIdx ? "⭐ قطار بعدی" : "آینده");
         
         tr.innerHTML = `<td>${i + 1}</td><td><strong>${t}</strong></td><td>${status}</td>`;
         tbody.appendChild(tr);
@@ -143,6 +163,7 @@ originSelect.addEventListener('change', calculateRoute);
 destSelect.addEventListener('change', calculateRoute);
 timeInput.addEventListener('input', calculateRoute);
 nowBtn.addEventListener('click', setCurrentTime);
+booleanCheckbox.addEventListener('change', calculateRoute);
 
 // اجرای اولیه
 loadScheduleData();
